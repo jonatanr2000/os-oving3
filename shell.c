@@ -149,6 +149,7 @@ int main(int argc, char const *argv[])
     {
         printDir();
         take_input();
+        //exec_command();
         process_input();
         
     }
