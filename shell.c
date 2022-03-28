@@ -14,7 +14,10 @@
 #define MAX_ARGS 10
 
 int command_handler();
+void command_executer();
+void exec_command();
 
+char cwd[MAX_LIMIT];
 char input[MAX_LIMIT];
 char *parsed[MAX_ARGS];
 char seps[] = " \t\r\n";
@@ -37,7 +40,6 @@ void init_shell()
 
 void printDir()
 {
-    char cwd[1024];
     getcwd(cwd, sizeof(cwd));
     printf("Dir: %s: ", cwd);
 }
@@ -66,19 +68,45 @@ void process_input() {
     // for (int i = 0; i < MAX_ARGS; i++) {     
     //     printf("%s \n", parsed[i]);     
     // }    
-
-    command_handler();
+    int status;
+    
+    if (command_handler() == 1 ) {
+        return;
+    } else {
+        //TODO
+        exec_command();
+    }
 }
+
+// void command_executer() {
+
+//     // TODO: fix zombies
+//     int exit_status;
+//     pid_t pid = fork();
+
+//     if (pid < 0) {
+//         printf("Failed to create child process\n");
+//         exit(0);                
+//     } else if (pid == 0) {
+//         exit_status = command_handler();
+//         exit(0);
+//     } else {
+//         wait(0);
+//         int status;
+//         waitpid(pid, &status, 0);
+//         printf("child process finished\n");
+//         return;
+//     }
+// }
 
 int command_handler() {
 
-    int num_commands = 4, commandswitch = 0;
+    int num_commands = 3, commandswitch = 0;
     char* commands[num_commands];
     
     commands[0] = "exit";
     commands[1] = "cd";
     commands[2] = "help";
-    commands[3] = "wrong";
 
     int i;
 
@@ -93,7 +121,7 @@ int command_handler() {
     switch (commandswitch)
     {
     case 1:
-        printf("Goodbye motherfucker!");
+        printf("Goodbye motherfucker!\n");
         exit(0);
         break;
     
@@ -102,21 +130,17 @@ int command_handler() {
         return 1;
 
     case 3:
-        /* code */
-        break;
-
-    case 4:
-        printf("\nHello.\nMind that this is "
-            "not a place to play around."
-            "\nUse help to know more..\n"
-            );
+        printf("List of available commands: \n");
+        for (int i = 0; i < num_commands; i++) {     
+            printf("\t%s \n", commands[i]);     
+        }
         return 1;
     
     default:
+        // printf("Command '%s' not found.\n", parsed[0]);
         break;
     }
     
-
     return 0;
 }
 
@@ -146,7 +170,7 @@ int main(int argc, char const *argv[])
     init_shell();
 
     while (1)
-    {
+    {   
         printDir();
         take_input();
         //exec_command();
