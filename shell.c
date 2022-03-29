@@ -7,7 +7,8 @@
 #include <readline/readline.h>
 #include <readline/history.h>
 #include <errno.h>
-#include <mach/error.h>
+// #include <mach/error.h>
+#include <error.h>
 
 #define clear() printf("\033[H\033[J")
 #define MAX_LIMIT 1024
@@ -128,7 +129,7 @@ void exec_command()
         printf("Executing %s\n", parsed[0]);
         if (execvp(parsed[0], parsed) < 0)
         {
-            unix_err(errno);
+            error(0, errno, "Error in child process");
         }
         exit(0);
     }
