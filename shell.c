@@ -77,6 +77,7 @@ int command_handler() {
     int num_commands = 4, commandswitch = 0;
     char* commands[num_commands];
     
+    //TOOD fix exit to cmd d/control d
     commands[0] = "exit";
     commands[1] = "cd";
     commands[2] = "help";
@@ -152,16 +153,24 @@ int stdout_redirection() {
         if(file == -1) {
             return 2;
         }
+
+        printf("The fd to pingResults: %d\n", file);
+        //Redirecter file descriptor 1 fra stdout til pingResults.txt
         int file2 = dup2(file, 1);
+
+        printf("The duplicated fd: %d\n", file2);
+        
+        int err = execlp("ping", "ping", "-c", "1", "google.com", NULL);
 
     }
 }
-  
+
+int stdout_redirection() {
+    return 0;
+}
 
 int main(int argc, char const *argv[])
 {
-
-
     //init_shell();
 
     //while (1)
