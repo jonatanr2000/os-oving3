@@ -6,8 +6,10 @@
 #include<sys/wait.h>
 #include<readline/readline.h>
 #include<readline/history.h>
-#include <error.h>
 #include <errno.h>
+#include <mach/error.h>
+#include <regex.h>
+#include <fcntl.h>
 
 #define clear() printf("\033[H\033[J")
 #define MAX_LIMIT 1024
@@ -115,8 +117,6 @@ int command_handler() {
     default:
         break;
     }
-    
-
     return 0;
 }
 
@@ -130,7 +130,7 @@ void exec_command() {
     } else if (pid == 0) {
         printf("Executing %s\n", parsed[0]);
         if (execvp(parsed[0], parsed) < 0) {
-            error(0, errno, "Could not execute command");
+            unix_err(errno);
         }
         exit(0);
     } else {
@@ -139,21 +139,45 @@ void exec_command() {
         return;
     }
 }
+
+int stdout_redirection() {
+    int pid = fork();
+    if(pid==-1){
+        return 1;
+    }
+
+    if(pid==0) {
+        //child process
+        int file = open("pingResults.txt", O_WRONLY | O_CREAT, 0777);
+        if(file == -1) {
+            return 2;
+        }
+        int file2 = dup2(file, 1);
+
+    }
+}
   
 
 int main(int argc, char const *argv[])
 {
-    init_shell();
 
-    while (1)
-    {
-        printDir();
-        take_input();
-        //exec_command();
-        process_input();
-        
-    }
+
+    //init_shell();
+
+    //while (1)
+    //{
+    //    printDir();
+    //    take_input();
+    //    //exec_command();
+    //    process_input();
+    //}
     
 
     return 0;
 }
+
+//Stdout - standard output
+//Stdin - standard 
+
+
+
