@@ -1,0 +1,7 @@
+The duplicated fd: 1
+PING google.com(arn11s12-in-x0e.1e100.net (2a00:1450:400f:805::200e)) 56 data bytes
+64 bytes from arn11s12-in-x0e.1e100.net (2a00:1450:400f:805::200e): icmp_seq=1 ttl=112 time=32.4 ms
+
+--- google.com ping statistics ---
+1 packets transmitted, 1 received, 0% packet loss, time 0ms
+rtt min/avg/max/mdev = 32.406/32.406/32.406/0.000 ms

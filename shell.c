@@ -7,7 +7,7 @@
 #include<readline/readline.h>
 #include<readline/history.h>
 #include <errno.h>
-#include <mach/error.h>
+#include <error.h>
 #include <regex.h>
 #include <fcntl.h>
 
@@ -16,6 +16,8 @@
 #define MAX_ARGS 10
 
 int command_handler();
+int stdout_redirection(int in);
+int ioredirection();
 
 char input[MAX_LIMIT];
 char *parsed[MAX_ARGS];
@@ -68,8 +70,41 @@ void process_input() {
     // for (int i = 0; i < MAX_ARGS; i++) {     
     //     printf("%s \n", parsed[i]);     
     // }    
-
+    int status = ioredirection();
     command_handler();
+}
+
+int ioredirection() {
+    
+    int in = -1, out = -1; 
+
+    int i;
+    for (i = 0; i < MAX_ARGS; i++)
+    {
+        if (strcmp(parsed[1], "<") == 0) {
+            in = i;
+        } 
+        if (strcmp(parsed[1], ">") == 0) {
+            out = i;
+        } 
+
+    }
+
+    if (in < 0 && out < 0) {
+        return 0;
+    }
+    printf("hei");
+
+    if (in > 0) {
+        printf("hei");
+        stdout_redirection(in);
+
+    } 
+    if (out > 0) {
+        //TODO
+    }
+
+    return 1;
 }
 
 int command_handler() {
@@ -131,7 +166,7 @@ void exec_command() {
     } else if (pid == 0) {
         printf("Executing %s\n", parsed[0]);
         if (execvp(parsed[0], parsed) < 0) {
-            unix_err(errno);
+            error(0, errno, "Failed run command.");
         }
         exit(0);
     } else {
@@ -141,7 +176,7 @@ void exec_command() {
     }
 }
 
-int stdout_redirection() {
+int stdout_redirection(int in) {
     int pid = fork();
     if(pid==-1){
         return 1;
@@ -149,7 +184,7 @@ int stdout_redirection() {
 
     if(pid==0) {
         //child process
-        int file = open("pingResults.txt", O_WRONLY | O_CREAT, 0777);
+        int file = open("results.txt", O_WRONLY | O_CREAT, 0777);
         if(file == -1) {
             return 2;
         }
@@ -160,26 +195,30 @@ int stdout_redirection() {
 
         printf("The duplicated fd: %d\n", file2);
         
-        int err = execlp("ping", "ping", "-c", "1", "google.com", NULL);
+        if (execvp(parsed[in-1], parsed) < 0) {
+            error(0, errno, "Failed run command.");
+        } else {
+            int status;
+            waitpid(pid, &status, 0);
+            return status;
+        }
+
+        //int err = execlp("ping", "ping", "-c", "1", "google.com", NULL);
 
     }
 }
 
-int stdout_redirection() {
-    return 0;
-}
-
 int main(int argc, char const *argv[])
 {
-    //init_shell();
-
-    //while (1)
-    //{
-    //    printDir();
-    //    take_input();
-    //    //exec_command();
-    //    process_input();
-    //}
+    init_shell();
+    //stdout_redirection();
+    while (1)
+    {
+       printDir();
+       take_input();
+       //exec_command();
+       process_input();
+    }
     
 
     return 0;
