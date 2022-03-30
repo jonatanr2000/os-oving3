@@ -16,7 +16,7 @@
 #define MAX_ARGS 10
 
 int command_handler();
-int stdout_redirection(int in);
+int stdout_redirection(int in, char** args);
 int ioredirection();
 
 char input[MAX_LIMIT];
@@ -103,7 +103,8 @@ int ioredirection()
 
     if (in > 0)
     {
-        stdout_redirection(in);
+        char *args[2] = {parsed[in-1], parsed[in+1]};
+        stdout_redirection(in, args);
     }
     if (out > 0)
     {
@@ -190,7 +191,7 @@ void exec_command()
     }
 }
 
-int stdout_redirection(int in)
+int stdout_redirection(int in, char** args)
 {
     int pid = fork();
     if (pid == -1)
@@ -207,16 +208,16 @@ int stdout_redirection(int in)
             return 2;
         }
 
-        printf("The fd to pingResults: %d\n", file);
+        //printf("The fd to pingResults: %d\n", file);
         // Redirecter file descriptor 1 fra stdout til pingResults.txt
         int file2 = dup2(file, 1);
 
-        printf("The duplicated fd: %d\n halla på deg 2", file2);
+        //printf("The duplicated fd: %d\n halla på deg 2", file2);
 
-        /*if (execvp(parsed[in - 1], parsed[in - 1]) < 0)
+        if (execvp(args[0], args) < 0)
         {
             error(0, errno, "Failed run command.");
-        }*/
+        }
         exit(0);
     }
     else

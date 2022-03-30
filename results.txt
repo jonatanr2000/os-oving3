@@ -1,2 +1,6 @@
-The duplicated fd: 1
- halla på deg 2r: /mnt/c/Users/eier/documents/kode/os/os-oving3: Dir: /mnt/c/Users/eier/documents/kode/os/os-oving3: Goodbye motherfucker!
+README.md
+a
+pingResults.txt
+results.txt
+shell
+shell.c
