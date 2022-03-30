@@ -18,6 +18,7 @@
 int command_handler();
 int stdout_redirection(int in, char** args);
 int ioredirection();
+void exec_command();
 
 char input[MAX_LIMIT];
 char *parsed[MAX_ARGS];
@@ -71,7 +72,9 @@ void process_input()
     // for (int i = 0; i < MAX_ARGS; i++) {
     //       printf("%s \n", parsed[i]);
     // }
-    int status = ioredirection();
+    if (ioredirection() == 1) {
+        return;
+    }
     command_handler();
 }
 
@@ -102,7 +105,7 @@ int ioredirection()
     }
 
     if (in > 0)
-    {
+    {   
         char *args[2] = {parsed[in-1], parsed[in+1]};
         stdout_redirection(in, args);
     }
@@ -112,6 +115,47 @@ int ioredirection()
     }
 
     return 1;
+}
+
+int stdout_redirection(int in, char** args)
+{   
+    //printf("%s\n", args[0]);
+    //printf("%s", args[1]);
+    int pid = fork();
+    if (pid == -1)
+    {
+        return 1;
+    }
+
+    if (pid == 0)
+    {
+        // child process
+        int file = open("results.txt", O_WRONLY | O_CREAT, 0777);
+        if (file == -1)
+        {
+            return 2;
+        }
+
+        //printf("The fd to pingResults: %d\n", file);
+        // Redirecter file descriptor 1 fra stdout til pingResults.txt
+        int file2 = dup2(file, 1);
+
+        //printf("The duplicated fd: %d\n halla på deg 2", file2);
+
+        if (execvp(args[0], args) < 0)
+        {
+            error(0, errno, "Failed run command.");
+        }
+        exit(0);
+    }
+    else
+    {
+        int status;
+        waitpid(pid, &status, 0);
+        return status;
+    }
+
+    // int err = execlp("ping", "ping", "-c", "1", "google.com", NULL);
 }
 
 int command_handler()
@@ -159,6 +203,7 @@ int command_handler()
         return 1;
 
     default:
+        exec_command();
         break;
     }
     return 0;
@@ -189,45 +234,6 @@ void exec_command()
         waitpid(pid, &status, 0);
         return;
     }
-}
-
-int stdout_redirection(int in, char** args)
-{
-    int pid = fork();
-    if (pid == -1)
-    {
-        return 1;
-    }
-
-    if (pid == 0)
-    {
-        // child process
-        int file = open("results.txt", O_WRONLY | O_CREAT, 0777);
-        if (file == -1)
-        {
-            return 2;
-        }
-
-        //printf("The fd to pingResults: %d\n", file);
-        // Redirecter file descriptor 1 fra stdout til pingResults.txt
-        int file2 = dup2(file, 1);
-
-        //printf("The duplicated fd: %d\n halla på deg 2", file2);
-
-        if (execvp(args[0], args) < 0)
-        {
-            error(0, errno, "Failed run command.");
-        }
-        exit(0);
-    }
-    else
-    {
-        int status;
-        waitpid(pid, &status, 0);
-        return status;
-    }
-
-    // int err = execlp("ping", "ping", "-c", "1", "google.com", NULL);
 }
 
 
