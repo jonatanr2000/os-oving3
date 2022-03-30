@@ -1,11 +1,11 @@
-#include<stdio.h>
-#include<string.h>
-#include<stdlib.h>
-#include<unistd.h>
-#include<sys/types.h>
-#include<sys/wait.h>
-#include<readline/readline.h>
-#include<readline/history.h>
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/wait.h>
+#include <readline/readline.h>
+#include <readline/history.h>
 #include <errno.h>
 #include <error.h>
 #include <regex.h>
@@ -27,12 +27,12 @@ void init_shell()
 {
     clear();
     printf("\n\n\n\n******************"
-        "************************");
+           "************************");
     printf("\n\n\n\t****MY SHELL****");
     printf("\n\n\t-USE AT YOUR OWN RISK-");
     printf("\n\n\n\n*******************"
-        "***********************");
-    char* username = getenv("USER");
+           "***********************");
+    char *username = getenv("USER");
     printf("\n\n\nUSER is: @%s", username);
     printf("\n");
     sleep(1);
@@ -46,73 +46,80 @@ void printDir()
     printf("Dir: %s: ", cwd);
 }
 
-void take_input() {
+void take_input()
+{
     fgets(input, MAX_LIMIT, stdin);
 }
 
-void process_input() {
+void process_input()
+{
 
     char *token;
     int count = 0;
-    
-    token = strtok( input, seps );
 
-    while( token != NULL )
+    token = strtok(input, seps);
+
+    while (token != NULL)
     {
         /* While there are tokens in "string" */
         parsed[count++] = token;
         /* Get next token: */
-        token = strtok( NULL, seps );
+        token = strtok(NULL, seps);
     }
     parsed[count] = NULL;
 
-    
-    // for (int i = 0; i < MAX_ARGS; i++) {     
-    //     printf("%s \n", parsed[i]);     
-    // }    
+    // for (int i = 0; i < MAX_ARGS; i++) {
+    //       printf("%s \n", parsed[i]);
+    // }
     int status = ioredirection();
     command_handler();
 }
 
-int ioredirection() {
+int ioredirection()
+{
     
-    int in = -1, out = -1; 
+    int in = -1, out = -1;
+    int count = 0;
 
-    int i;
-    for (i = 0; i < MAX_ARGS; i++)
+    while (parsed[count] != NULL)
     {
-        if (strcmp(parsed[1], "<") == 0) {
-            in = i;
-        } 
-        if (strcmp(parsed[1], ">") == 0) {
-            out = i;
-        } 
-
+    
+        if (strcmp(parsed[count], "<") == 0)
+        {
+            in = count;
+        }
+        if (strcmp(parsed[count], ">") == 0)
+        {
+            out = count;
+        }
+        
+        count++;
     }
 
-    if (in < 0 && out < 0) {
+    if (in < 0 && out < 0)
+    {
         return 0;
     }
-    printf("hei");
 
-    if (in > 0) {
-        printf("hei");
+    if (in > 0)
+    {
         stdout_redirection(in);
-
-    } 
-    if (out > 0) {
-        //TODO
+    }
+    if (out > 0)
+    {
+        // TODO
     }
 
     return 1;
 }
 
-int command_handler() {
+int command_handler()
+{
 
     int num_commands = 4, commandswitch = 0;
-    char* commands[num_commands];
-    
-    //TOOD fix exit to cmd d/control d
+    char *commands[num_commands];
+
+    // TOOD fix exit to cmd d/control d
     commands[0] = "exit";
     commands[1] = "cd";
     commands[2] = "help";
@@ -122,7 +129,8 @@ int command_handler() {
 
     for (i = 0; i < num_commands; i++)
     {
-        if (strcmp(parsed[0], commands[i]) == 0) {
+        if (strcmp(parsed[0], commands[i]) == 0)
+        {
             commandswitch = i + 1;
             break;
         }
@@ -134,7 +142,7 @@ int command_handler() {
         printf("Goodbye motherfucker!");
         exit(0);
         break;
-    
+
     case 2:
         chdir(parsed[1]);
         return 1;
@@ -145,87 +153,97 @@ int command_handler() {
 
     case 4:
         printf("\nHello.\nMind that this is "
-            "not a place to play around."
-            "\nUse help to know more..\n"
-            );
+               "not a place to play around."
+               "\nUse help to know more..\n");
         return 1;
-    
+
     default:
         break;
     }
     return 0;
 }
 
-void exec_command() {
+void exec_command()
+{
 
     // Create child process
     pid_t pid = fork();
 
-    if (pid < 0) {
+    if (pid < 0)
+    {
         printf("Failed to create child process\n");
-    } else if (pid == 0) {
+    }
+    else if (pid == 0)
+    {
         printf("Executing %s\n", parsed[0]);
-        if (execvp(parsed[0], parsed) < 0) {
+        if (execvp(parsed[0], parsed) < 0)
+        {
             error(0, errno, "Failed run command.");
         }
         exit(0);
-    } else {
+    }
+    else
+    {
         int status;
         waitpid(pid, &status, 0);
         return;
     }
 }
 
-int stdout_redirection(int in) {
+int stdout_redirection(int in)
+{
     int pid = fork();
-    if(pid==-1){
+    if (pid == -1)
+    {
         return 1;
     }
 
-    if(pid==0) {
-        //child process
+    if (pid == 0)
+    {
+        // child process
         int file = open("results.txt", O_WRONLY | O_CREAT, 0777);
-        if(file == -1) {
+        if (file == -1)
+        {
             return 2;
         }
 
         printf("The fd to pingResults: %d\n", file);
-        //Redirecter file descriptor 1 fra stdout til pingResults.txt
+        // Redirecter file descriptor 1 fra stdout til pingResults.txt
         int file2 = dup2(file, 1);
 
-        printf("The duplicated fd: %d\n", file2);
-        
-        if (execvp(parsed[in-1], parsed) < 0) {
+        printf("The duplicated fd: %d\n halla på deg 2", file2);
+
+        /*if (execvp(parsed[in - 1], parsed[in - 1]) < 0)
+        {
             error(0, errno, "Failed run command.");
-        } else {
-            int status;
-            waitpid(pid, &status, 0);
-            return status;
-        }
-
-        //int err = execlp("ping", "ping", "-c", "1", "google.com", NULL);
-
+        }*/
+        exit(0);
     }
+    else
+    {
+        int status;
+        waitpid(pid, &status, 0);
+        return status;
+    }
+
+    // int err = execlp("ping", "ping", "-c", "1", "google.com", NULL);
 }
+
 
 int main(int argc, char const *argv[])
 {
     init_shell();
-    //stdout_redirection();
+    // stdout_redirection();
     while (1)
     {
-       printDir();
-       take_input();
-       //exec_command();
-       process_input();
+        printDir();
+        take_input();
+        // exec_command();
+        process_input();
     }
-    
 
     return 0;
 }
 
-//Stdout - standard output
-//Stdin - standard 
-
-
-
+// Stdout - standard output
+// Stdin - standard
