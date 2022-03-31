@@ -1,6 +1,9 @@
-README.md
-a
-pingResults.txt
-results.txt
-shell
-shell.c
+simenkathirgamadas console  Mar 21 23:23 
+simenkathirgamadas ttys000  Mar 31 15:42 
+em is running
+# in single-user mode.  At other times this information is provided by
+# Open Directory.
+#
+# See the opendirectoryd(8) man page for additional information about
+# Open Directory.
+##
