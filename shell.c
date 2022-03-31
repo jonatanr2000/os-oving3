@@ -106,6 +106,7 @@ int ioredirection()
 
     if (in > 0)
     {   
+        // Dette er en shit løsning fordi den ikke tar hensyn til at vi har lenger enn kun én parameter
         char *args[2] = {parsed[in-1], parsed[in+1]};
         stdout_redirection(in, args);
     }
