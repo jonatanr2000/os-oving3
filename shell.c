@@ -7,8 +7,8 @@
 #include <readline/readline.h>
 #include <readline/history.h>
 #include <errno.h>
-//#include <error.h>
-#include <mach/error.h>
+#include <error.h>
+//#include <mach/error.h>
 #include <regex.h>
 #include <fcntl.h>
 #include <sys/stat.h>
@@ -19,7 +19,7 @@
 
 char buffer[100];
 int command_handler();
-int stdout_redirection(int in, char **args);
+int stdout_redirection(int in, char **args, char *location);
 int ioredirection();
 // int stdin_redirection(int n, char **args);
 void exec_command();
@@ -92,13 +92,13 @@ int ioredirection()
     while (parsed[count] != NULL)
     {
 
-        if (strcmp(parsed[count], "<") == 0)
-        {
-            in = count;
-        }
         if (strcmp(parsed[count], ">") == 0)
         {
             out = count;
+        }
+        if (strcmp(parsed[count], "<") == 0)
+        {
+            in = count;
         }
 
         count++;
@@ -111,20 +111,38 @@ int ioredirection()
 
     if (in > 0)
     {
-        // Dette er en shit løsning fordi den ikke tar hensyn til at vi har lenger enn kun én parameter
         char *args[2] = {parsed[in - 1], parsed[in + 1]};
-        stdout_redirection(in, args);
+        // stdin_redirection(out, args);
     }
     if (out > 0)
     {
+        // Dette er en shit løsning fordi den ikke tar hensyn til at vi har lenger enn kun én parameter
+        char location[1024];
+        if (parsed[out + 1] != NULL) {
+            strcpy(location, parsed[out+1]);
+        } else {
+            strcpy(location, "results.txt");
+        }
+        
         char *args[2] = {parsed[out - 1], parsed[out + 1]};
-        // stdin_redirection(out, args);
+        // int i;
+        // for (i = 0; i < out; i++)
+        // {
+        //     args[i] = parsed[i];
+        // }
+        // for (int i = 0; i < 2; i++) {
+        //   printf("%s \n", args[i]);
+        // }
+
+        
+        
+        stdout_redirection(in, args, location);
     }
 
     return 1;
 }
 
-int stdout_redirection(int in, char **args)
+int stdout_redirection(int in, char **args, char* location)
 {
     // printf("%s\n", args[0]);
     // printf("%s", args[1]);
@@ -136,12 +154,15 @@ int stdout_redirection(int in, char **args)
 
     if (pid == 0)
     {
+        printf("god dag");
         // child process
-        int file = open("results.txt", O_WRONLY | O_CREAT, 0777);
+        //printf("%s\n", location);
+        int file = open(location, O_WRONLY | O_CREAT, 0777);
         if (file == -1)
         {
             return 2;
         }
+        printf("hei på deg");
 
         // printf("The fd to pingResults: %d\n", file);
         //  Redirecter file descriptor 1 fra stdout til pingResults.txt
@@ -149,11 +170,12 @@ int stdout_redirection(int in, char **args)
 
         // printf("The duplicated fd: %d\n halla på deg 2", file2);
 
-        if (execvp(args[0], args) < 0)
-        {
-            // error(0, errno, "Failed run command.");
-            unix_err(errno);
-        }
+        printf("hei");
+        // if (execvp(args[0], args) < 0)
+        // {
+        //     error(0, errno, "Failed run command.");
+        //     //unix_err(errno);
+        // }
         exit(0);
     }
     else
@@ -264,8 +286,8 @@ void exec_command()
         printf("Executing %s\n", parsed[0]);
         if (execvp(parsed[0], parsed) < 0)
         {
-            // error(0, errno, "Failed run command.");
-            unix_err(errno);
+            error(0, errno, "Failed run command.");
+            //unix_err(errno);
         }
         exit(0);
     }
