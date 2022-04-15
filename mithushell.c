@@ -6,7 +6,8 @@
 #include <sys/wait.h>
 #include <readline/readline.h>
 #include <readline/history.h>
-#include <errno.h>
+//#include <errno.h>
+#include <mach/error.h>
 //#include <error.h>
 #include <regex.h>
 #include <fcntl.h>
@@ -16,7 +17,6 @@
 #define MAX_ARGS 10
 
 int command_handler();
-int stdout_redirection(int in, char** args);
 int ioredirection();
 void exec_command();
 
@@ -40,6 +40,12 @@ void init_shell()
     clear();
 }
 
+void printDir()
+{
+    char cwd[1024];
+    getcwd(cwd, sizeof(cwd));
+    printf("Dir: %s: ", cwd);
+}
 
 void process_input()
 {
@@ -61,6 +67,8 @@ void process_input()
     // for (int i = 0; i < MAX_ARGS; i++) {
     //       printf("%s \n", parsed[i]);
     // }
+
+    printf("%c", parsed);
     if (ioredirection() == 1) {
         return;
     }
@@ -135,7 +143,8 @@ void exec_command()
         printf("Executing %s\n", parsed[0]);
         if (execvp(parsed[0], parsed) < 0)
         {
-            error(0, errno, "Failed run command.");
+            //error(0, errno, "Failed run command.");
+            //error();
         }
         exit(0);
     }
@@ -147,7 +156,6 @@ void exec_command()
     }
 }
 
-
 int ioredirection() {
 
     int pid = fork();
@@ -157,8 +165,8 @@ int ioredirection() {
     int in = -1, out = -1;
     int count = 0;
     
-    char input[128];
-    char output[128];
+    char ip[128];
+    char op[128];
 
     while (parsed[count] != NULL)
     {
@@ -167,13 +175,13 @@ int ioredirection() {
         {
             in = count;
             parsed[count] = NULL;
-            strcpy(input, parsed[count+1]);
+            strcpy(ip, parsed[count+1]);
         }
         if (strcmp(parsed[count], ">") == 0)
         {
             out = count;
             parsed[count] = NULL;
-            strcpy(output, parsed[count+1]);
+            strcpy(op, parsed[count+1]);
         }
         
         count++;
@@ -186,7 +194,7 @@ int ioredirection() {
 
     if (in > 0)
     {   
-        int file = open(input, O_RDONLY, 0);
+        int file = open(ip, O_RDONLY, 0);
         if (file <0 )
         {
             perror("File could not be opened");
@@ -198,13 +206,17 @@ int ioredirection() {
 
     if (out > 0)
     {
-       int file1 = creat(output, 0644);
+       int file1 = creat(op, 0644);
        if(file1 < 0) {
            perror("Could not open the file");
            exit(0);
        }
+       dup2(file1, 1);
+       close(file1);
     }
 
+    //TODO execute kommando etter io redirection.
+  
     }
 
     else {
@@ -216,53 +228,13 @@ int ioredirection() {
 }
 
 
-int stdout_redirection(int in, char** args)
-{   
-    //printf("%s\n", args[0]);
-    //printf("%s", args[1]);
-    int pid = fork();
-    if (pid == -1)
-    {
-        return 1;
-    }
-
-    if (pid == 0)
-    {
-        // child process
-        int file = open("results.txt", O_WRONLY | O_CREAT, 0777);
-        if (file == -1)
-        {
-            return 2;
-        }
-
-        //printf("The fd to pingResults: %d\n", file);
-        // Redirecter file descriptor 1 fra stdout til pingResults.txt
-        int file2 = dup2(file, 1);
-
-        //printf("The duplicated fd: %d\n halla på deg 2", file2);
-
-        if (execvp(args[0], args) < 0)
-        {
-            error(0, errno, "Failed run command.");
-        }
-        exit(0);
-    }
-    else
-    {
-        int status;
-        waitpid(pid, &status, 0);
-        return status;
-    }
-}
-
 int main(int argc, char const *argv[])
 {
     init_shell();
     // stdout_redirection();
     while (1)
     {
-        printDir();
-        take_input();
+        //printDir();
         // exec_command();
         process_input();
     }
