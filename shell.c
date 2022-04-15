@@ -21,7 +21,7 @@ char buffer[100];
 int command_handler();
 int stdout_redirection(int in, char **args);
 int ioredirection();
-int stdin_redirection(int n, char **args);
+// int stdin_redirection(int n, char **args);
 void exec_command();
 
 char input[MAX_LIMIT];
@@ -118,7 +118,7 @@ int ioredirection()
     if (out > 0)
     {
         char *args[2] = {parsed[out - 1], parsed[out + 1]};
-        stdin_redirection(out, args);
+        // stdin_redirection(out, args);
     }
 
     return 1;
@@ -291,6 +291,3 @@ int main(int argc, char const *argv[])
 
     return 0;
 }
-
-// Stdout - standard output
-// Stdin - standard
