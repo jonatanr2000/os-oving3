@@ -175,13 +175,19 @@ int ioredirection() {
         {
             in = count;
             parsed[count] = NULL;
+
             strcpy(ip, parsed[count+1]);
+            //Vi må muligens ha med denne også. 
+            parsed[count+1] = NULL;
         }
         if (strcmp(parsed[count], ">") == 0)
         {
             out = count;
             parsed[count] = NULL;
+
             strcpy(op, parsed[count+1]);
+            //Vi må muligens ha med denne også. 
+            parsed[count+1] = NULL;
         }
         
         count++;
@@ -216,6 +222,14 @@ int ioredirection() {
     }
 
     //TODO execute kommando etter io redirection.
+    if (execvp(*parsed, parsed) < 0)
+        {
+            //error(0, errno, "Failed run command.");
+        }
+        exit(0);
+    //sende inn riktig parsede argumenter.
+
+    //exite
   
     }
 

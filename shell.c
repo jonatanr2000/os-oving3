@@ -7,21 +7,17 @@
 #include <readline/readline.h>
 #include <readline/history.h>
 #include <errno.h>
-#include <error.h>
-//#include <mach/error.h>
+//#include <error.h>
 #include <regex.h>
 #include <fcntl.h>
-#include <sys/stat.h>
 
 #define clear() printf("\033[H\033[J")
 #define MAX_LIMIT 1024
 #define MAX_ARGS 10
 
-char buffer[100];
 int command_handler();
-int stdout_redirection(int in, char **args, char *location);
+int stdout_redirection(int in, char** args);
 int ioredirection();
-// int stdin_redirection(int n, char **args);
 void exec_command();
 
 char input[MAX_LIMIT];
@@ -76,8 +72,7 @@ void process_input()
     // for (int i = 0; i < MAX_ARGS; i++) {
     //       printf("%s \n", parsed[i]);
     // }
-    if (ioredirection() == 1)
-    {
+    if (ioredirection() == 1) {
         return;
     }
     command_handler();
@@ -85,22 +80,22 @@ void process_input()
 
 int ioredirection()
 {
-
+    
     int in = -1, out = -1;
     int count = 0;
 
     while (parsed[count] != NULL)
     {
-
-        if (strcmp(parsed[count], ">") == 0)
-        {
-            out = count;
-        }
+    
         if (strcmp(parsed[count], "<") == 0)
         {
             in = count;
         }
-
+        if (strcmp(parsed[count], ">") == 0)
+        {
+            out = count;
+        }
+        
         count++;
     }
 
@@ -110,42 +105,27 @@ int ioredirection()
     }
 
     if (in > 0)
-    {
-        char *args[2] = {parsed[in - 1], parsed[in + 1]};
-        // stdin_redirection(out, args);
+    {   
+        // Dette er en shit løsning fordi den ikke tar hensyn til at vi har lenger enn kun én parameter
+        char *args[2] = {parsed[in-1], parsed[in+1]};
+        stdout_redirection(in, args);
+
+        //ls < hei.txt
     }
+
     if (out > 0)
     {
-        // Dette er en shit løsning fordi den ikke tar hensyn til at vi har lenger enn kun én parameter
-        char location[1024];
-        if (parsed[out + 1] != NULL) {
-            strcpy(location, parsed[out+1]);
-        } else {
-            strcpy(location, "results.txt");
-        }
-        
         char *args[2] = {parsed[out - 1], parsed[out + 1]};
-        // int i;
-        // for (i = 0; i < out; i++)
-        // {
-        //     args[i] = parsed[i];
-        // }
-        // for (int i = 0; i < 2; i++) {
-        //   printf("%s \n", args[i]);
-        // }
-
-        
-        
-        stdout_redirection(in, args, location);
+        stdin_redirection(out, args);
     }
 
     return 1;
 }
 
-int stdout_redirection(int in, char **args, char* location)
-{
-    // printf("%s\n", args[0]);
-    // printf("%s", args[1]);
+int stdout_redirection(int in, char** args)
+{   
+    //printf("%s\n", args[0]);
+    //printf("%s", args[1]);
     int pid = fork();
     if (pid == -1)
     {
@@ -154,28 +134,23 @@ int stdout_redirection(int in, char **args, char* location)
 
     if (pid == 0)
     {
-        printf("god dag");
         // child process
-        //printf("%s\n", location);
-        int file = open(location, O_WRONLY | O_CREAT, 0777);
+        int file = open("results.txt", O_WRONLY | O_CREAT, 0777);
         if (file == -1)
         {
             return 2;
         }
-        printf("hei på deg");
 
-        // printf("The fd to pingResults: %d\n", file);
-        //  Redirecter file descriptor 1 fra stdout til pingResults.txt
+        //printf("The fd to pingResults: %d\n", file);
+        // Redirecter file descriptor 1 fra stdout til pingResults.txt
         int file2 = dup2(file, 1);
 
-        // printf("The duplicated fd: %d\n halla på deg 2", file2);
+        //printf("The duplicated fd: %d\n halla på deg 2", file2);
 
-        printf("hei");
-        // if (execvp(args[0], args) < 0)
-        // {
-        //     error(0, errno, "Failed run command.");
-        //     //unix_err(errno);
-        // }
+        if (execvp(args[0], args) < 0)
+        {
+            error(0, errno, "Failed run command.");
+        }
         exit(0);
     }
     else
@@ -187,38 +162,6 @@ int stdout_redirection(int in, char **args, char* location)
 
     // int err = execlp("ping", "ping", "-c", "1", "google.com", NULL);
 }
-
-// forslag til input redirection
-/*
-int stdin_redirection(int n, char **args)
-{
-    int pid = fork();
-
-    if (pid == -1)
-    {
-        // hvorfor det her?
-        return 1;
-    }
-    else if (pid == 0)
-    {
-        // child process
-        // errorhandling
-        int redirect_fd = open("results.txt", O_RDONLY, 0777);
-        dup2(redirect_fd, STDIN_FILENO);
-        if (execvp(args[0], args) < 0)
-        {
-            unix_err(errno);
-        }
-        exit(0);
-    }
-    else
-    {
-        int status;
-        waitpid(pid, &status, 0);
-        return status;
-    }
-}
-*/
 
 int command_handler()
 {
@@ -287,7 +230,6 @@ void exec_command()
         if (execvp(parsed[0], parsed) < 0)
         {
             error(0, errno, "Failed run command.");
-            //unix_err(errno);
         }
         exit(0);
     }
@@ -298,6 +240,7 @@ void exec_command()
         return;
     }
 }
+
 
 int main(int argc, char const *argv[])
 {
@@ -313,3 +256,6 @@ int main(int argc, char const *argv[])
 
     return 0;
 }
+
+// Stdout - standard output
+// Stdin - standard
