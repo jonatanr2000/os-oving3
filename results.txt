@@ -1,7 +1,0 @@
-README.md
-a
-hei.txt
-pingResults.txt
-results.txt
-shell
-shell.c

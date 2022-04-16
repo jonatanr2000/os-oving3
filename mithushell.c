@@ -6,9 +6,9 @@
 #include <sys/wait.h>
 #include <readline/readline.h>
 #include <readline/history.h>
-//#include <errno.h>
-#include <mach/error.h>
-//#include <error.h>
+#include <errno.h>
+//#include <mach/error.h>
+#include <error.h>
 #include <regex.h>
 #include <fcntl.h>
 
@@ -47,6 +47,11 @@ void printDir()
     printf("Dir: %s: ", cwd);
 }
 
+void take_input()
+{
+    fgets(input, MAX_LIMIT, stdin);
+}
+
 void process_input()
 {
 
@@ -68,11 +73,11 @@ void process_input()
     //       printf("%s \n", parsed[i]);
     // }
 
-    printf("%c", parsed);
+    //printf("%c", parsed);
     if (ioredirection() == 1) {
         return;
     }
-    command_handler();
+    //command_handler();
 }
 
 
@@ -143,7 +148,7 @@ void exec_command()
         printf("Executing %s\n", parsed[0]);
         if (execvp(parsed[0], parsed) < 0)
         {
-            //error(0, errno, "Failed run command.");
+            error(0, errno, "Failed run command.");
             //error();
         }
         exit(0);
@@ -165,8 +170,8 @@ int ioredirection() {
     int in = -1, out = -1;
     int count = 0;
     
-    char ip[128];
-    char op[128];
+    char i_location[128];
+    char o_location[128];
 
     while (parsed[count] != NULL)
     {
@@ -176,7 +181,7 @@ int ioredirection() {
             in = count;
             parsed[count] = NULL;
 
-            strcpy(ip, parsed[count+1]);
+            strcpy(i_location, parsed[count+1]);
             //Vi må muligens ha med denne også. 
             parsed[count+1] = NULL;
         }
@@ -185,7 +190,7 @@ int ioredirection() {
             out = count;
             parsed[count] = NULL;
 
-            strcpy(op, parsed[count+1]);
+            strcpy(o_location, parsed[count+1]);
             //Vi må muligens ha med denne også. 
             parsed[count+1] = NULL;
         }
@@ -200,7 +205,7 @@ int ioredirection() {
 
     if (in > 0)
     {   
-        int file = open(ip, O_RDONLY, 0);
+        int file = open(i_location, O_RDONLY, 0);
         if (file <0 )
         {
             perror("File could not be opened");
@@ -212,7 +217,7 @@ int ioredirection() {
 
     if (out > 0)
     {
-       int file1 = creat(op, 0644);
+       int file1 = creat(o_location, 0644);
        if(file1 < 0) {
            perror("Could not open the file");
            exit(0);
@@ -224,7 +229,7 @@ int ioredirection() {
     //TODO execute kommando etter io redirection.
     if (execvp(*parsed, parsed) < 0)
         {
-            //error(0, errno, "Failed run command.");
+            error(0, errno, "Failed run command.");
         }
         exit(0);
     //sende inn riktig parsede argumenter.
@@ -248,7 +253,8 @@ int main(int argc, char const *argv[])
     // stdout_redirection();
     while (1)
     {
-        //printDir();
+        printDir();
+        take_input();
         // exec_command();
         process_input();
     }
