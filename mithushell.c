@@ -22,6 +22,7 @@ void exec_command();
 
 char input[MAX_LIMIT];
 char *parsed[MAX_ARGS];
+char *args[MAX_ARGS];
 char seps[] = " \t\r\n";
 
 void init_shell()
@@ -161,6 +162,22 @@ void exec_command()
     }
 }
 
+void fix_command_args() {
+    
+    for (int i = 0; i < MAX_ARGS; i++)
+    {
+        if (parsed[i] == NULL) {
+            continue;
+        }
+
+        args[i] = parsed[i];
+    }
+
+    // for (int i = 0; i < MAX_ARGS; i++) {
+    //       printf("%s \n", args[i]);
+    // }
+}
+
 int ioredirection() {
 
     int pid = fork();
@@ -175,7 +192,7 @@ int ioredirection() {
 
     while (parsed[count] != NULL)
     {
-    
+        
         if (strcmp(parsed[count], "<") == 0)
         {
             in = count;
@@ -184,6 +201,9 @@ int ioredirection() {
             strcpy(i_location, parsed[count+1]);
             //Vi må muligens ha med denne også. 
             parsed[count+1] = NULL;
+
+            // Gjør sånn at args-arrayet KUN har kommandoen som skal bli utført
+            fix_command_args();
         }
         if (strcmp(parsed[count], ">") == 0)
         {
@@ -193,6 +213,9 @@ int ioredirection() {
             strcpy(o_location, parsed[count+1]);
             //Vi må muligens ha med denne også. 
             parsed[count+1] = NULL;
+
+            // Gjør sånn at args-arrayet KUN har kommandoen som skal bli utført
+            fix_command_args();
         }
         
         count++;
@@ -227,7 +250,7 @@ int ioredirection() {
     }
 
     //TODO execute kommando etter io redirection.
-    if (execvp(*parsed, parsed) < 0)
+    if (execvp(*args, args) < 0)
         {
             error(0, errno, "Failed run command.");
         }
