@@ -7,8 +7,8 @@
 #include <readline/readline.h>
 #include <readline/history.h>
 #include <errno.h>
-//#include <mach/error.h>
-#include <error.h>
+#include <mach/error.h>
+//#include <error.h>
 #include <regex.h>
 #include <fcntl.h>
 
@@ -20,12 +20,88 @@ int command_handler();
 int ioredirection();
 void exec_command();
 void fix_command_args();
+void printList();
+void insertToLinkedList();
+int removeFromLinkedList();
+int isEmpty();
 
 char input[MAX_LIMIT];
 char args_str[MAX_LIMIT];
 char *parsed[MAX_ARGS];
 char *args[MAX_ARGS];
 char seps[] = " \t\r\n";
+
+// background process
+struct node
+{
+    int data;
+    char *command;
+    struct node *next;
+};
+
+struct node *head = NULL;
+struct node *current = NULL;
+
+// display the list
+void printList()
+{
+    struct node *ptr = head;
+    printf("\n[ ");
+    if (ptr == NULL)
+    {
+        printf("There are no background processes");
+    }
+    // start from the beginning
+    while (ptr != NULL)
+    {
+        printf("Pid: %d, command: %s\n", ptr->data, ptr->command);
+    }
+    printf(" ]");
+}
+
+// insert link at the first location
+void insertToLinkedList(int data, char *commandArgs)
+{
+    if (isEmpty() == 1)
+    {
+        head = (struct node *)malloc(sizeof(struct node));
+        head->data = data;
+        head->command = strdup(commandArgs);
+        current = head;
+    }
+    else
+    {
+        struct node *inputNode = (struct node *)malloc(sizeof(struct node));
+        inputNode->data = data;
+        inputNode->command = strdup(commandArgs);
+        current->next = inputNode;
+        current = inputNode;
+    }
+}
+
+// delete a link with given key
+int removeFromLinkedList(int data)
+{
+    struct node *current = head;
+    struct node *previous = NULL;
+
+    if (isEmpty() == 1)
+    {
+        return 0;
+    }
+}
+
+// if list is empty
+int isEmpty()
+{
+    if (head == NULL)
+    {
+        return 1;
+    };
+    return 0;
+}
+
+// background process
 
 void init_shell()
 {
@@ -50,23 +126,45 @@ void printDir()
     printf("Dir: %s: ", cwd);
 }
 
-void take_input()
-{
-    fgets(input, MAX_LIMIT, stdin);
-}
-
 void process_input()
 {
 
     // Saving the argument string for later use
     strcpy(args_str, input);
-    args_str[strlen(args_str)-1]='\0';
+    args_str[strlen(args_str) - 1] = '\0';
 
     char *token;
+    char *midl_token;
+    char lastChar;
     int count = 0;
 
-    token = strtok(input, seps);
+    // background process kode
+    int runBackgroundProcess;
+    memset(input, 0, sizeof(input));
 
+    if ((midl_token = fgets(input, MAX_LIMIT, stdin)) == NULL)
+    {
+        // print_error();
+        unix_err(errno);
+    }
+    lastChar = midl_token[(strlen(midl_token) - 2)];
+    printf("%c \n", lastChar);
+
+    if (lastChar == '&')
+    {
+        runBackgroundProcess = 1;
+        printf("%s \n", midl_token);
+        midl_token[(strlen(midl_token) - 2)] = '\0';
+        printf("%s \n", midl_token);
+    }
+    else
+    {
+        runBackgroundProcess = 0;
+    }
+    printf("%d \n", runBackgroundProcess);
+    // background process kode
+
+    token = strtok(input, seps);
     while (token != NULL)
     {
         /* While there are tokens in "string" */
@@ -153,12 +251,12 @@ void exec_command()
     else if (pid == 0)
     {
         fix_command_args();
-        
-        //printf("Executing [%s]\n", input);
+
+        // printf("Executing [%s]\n", input);
         if (execvp(*args, args) < 0)
         {
-            error(0, errno, "Failed run command.");
-            // error();
+            // error(0, errno, "Failed run command.");
+            unix_err(errno);
         }
         exit(0);
     }
@@ -249,7 +347,6 @@ int ioredirection()
                 exit(0);
             }
             dup2(file, 0);
-
             close(file);
         }
 
@@ -268,7 +365,8 @@ int ioredirection()
         // TODO execute kommando etter io redirection.
         if (execvp(*args, args) < 0)
         {
-            error(0, errno, "Failed run command.");
+            // error(0, errno, "Failed run command.");
+            unix_err(errno);
         }
         exit(0);
         // sende inn riktig parsede argumenter.
@@ -292,7 +390,6 @@ int main(int argc, char const *argv[])
     while (1)
     {
         printDir();
-        take_input();
         // exec_command();
         process_input();
     }
