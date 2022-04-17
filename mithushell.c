@@ -14,13 +14,15 @@
 
 #define clear() printf("\033[H\033[J")
 #define MAX_LIMIT 1024
-#define MAX_ARGS 10
+#define MAX_ARGS 30
 
 int command_handler();
 int ioredirection();
 void exec_command();
+void fix_command_args();
 
 char input[MAX_LIMIT];
+char args_str[MAX_LIMIT];
 char *parsed[MAX_ARGS];
 char *args[MAX_ARGS];
 char seps[] = " \t\r\n";
@@ -56,6 +58,10 @@ void take_input()
 void process_input()
 {
 
+    // Saving the argument string for later use
+    strcpy(args_str, input);
+    args_str[strlen(args_str)-1]='\0';
+
     char *token;
     int count = 0;
 
@@ -68,19 +74,20 @@ void process_input()
         /* Get next token: */
         token = strtok(NULL, seps);
     }
+
     parsed[count] = NULL;
 
     // for (int i = 0; i < MAX_ARGS; i++) {
     //       printf("%s \n", parsed[i]);
     // }
 
-    //printf("%c", parsed);
-    if (ioredirection() == 1) {
+    // printf("%c", parsed);
+    if (ioredirection() == 0)
+    {
         return;
     }
-    //command_handler();
+    command_handler();
 }
-
 
 int command_handler()
 {
@@ -133,7 +140,6 @@ int command_handler()
     return 0;
 }
 
-
 void exec_command()
 {
 
@@ -146,11 +152,13 @@ void exec_command()
     }
     else if (pid == 0)
     {
-        printf("Executing %s\n", parsed[0]);
-        if (execvp(parsed[0], parsed) < 0)
+        fix_command_args();
+        
+        //printf("Executing [%s]\n", input);
+        if (execvp(*args, args) < 0)
         {
             error(0, errno, "Failed run command.");
-            //error();
+            // error();
         }
         exit(0);
     }
@@ -158,15 +166,18 @@ void exec_command()
     {
         int status;
         waitpid(pid, &status, 0);
+        printf("Exit status [%s]: %i\n", args_str, status);
         return;
     }
 }
 
-void fix_command_args() {
-    
+void fix_command_args()
+{
+
     for (int i = 0; i < MAX_ARGS; i++)
     {
-        if (parsed[i] == NULL) {
+        if (parsed[i] == NULL || parsed[i] == "\0")
+        {
             continue;
         }
 
@@ -178,97 +189,101 @@ void fix_command_args() {
     // }
 }
 
-int ioredirection() {
+int ioredirection()
+{
 
     int pid = fork();
 
-    if(pid==0){
-    
-    int in = -1, out = -1;
-    int count = 0;
-    
-    char i_location[128];
-    char o_location[128];
-
-    while (parsed[count] != NULL)
+    if (pid == 0)
     {
-        
-        if (strcmp(parsed[count], "<") == 0)
+
+        int in = -1, out = -1;
+        int count = 0;
+
+        char i_location[128];
+        char o_location[128];
+
+        // for (int i = 0; i < MAX_ARGS; i++) {
+        //     printf("%s \n", parsed[i]);
+        // }
+
+        while (parsed[count] != NULL)
         {
-            in = count;
-            parsed[count] = NULL;
+            // printf("%s\n", parsed[count]);
+            if (strcmp(parsed[count], "<") == 0)
+            {
+                in = count;
 
-            strcpy(i_location, parsed[count+1]);
-            //Vi må muligens ha med denne også. 
-            parsed[count+1] = NULL;
+                parsed[count] = "\0";
 
-            // Gjør sånn at args-arrayet KUN har kommandoen som skal bli utført
-            fix_command_args();
+                strcpy(i_location, parsed[count + 1]);
+
+                // Vi må muligens ha med denne også.
+                parsed[count + 1] = "\0";
+            }
+            if (strcmp(parsed[count], ">") == 0)
+            {
+                out = count;
+                parsed[count] = "\0";
+
+                strcpy(o_location, parsed[count + 1]);
+                // Vi må muligens ha med denne også.
+                parsed[count + 1] = "\0";
+            }
+            count++;
         }
-        if (strcmp(parsed[count], ">") == 0)
+        // Gjør sånn at args-arrayet KUN har kommandoen som skal bli utført
+        fix_command_args();
+
+        if (in < 0 && out < 0)
         {
-            out = count;
-            parsed[count] = NULL;
-
-            strcpy(o_location, parsed[count+1]);
-            //Vi må muligens ha med denne også. 
-            parsed[count+1] = NULL;
-
-            // Gjør sånn at args-arrayet KUN har kommandoen som skal bli utført
-            fix_command_args();
+            return 1;
         }
-        
-        count++;
-    }
 
-    if (in < 0 && out < 0)
-    {
-        return 0;
-    }
-
-    if (in > 0)
-    {   
-        int file = open(i_location, O_RDONLY, 0);
-        if (file <0 )
+        if (in > 0)
         {
-            perror("File could not be opened");
-            exit(0);
+            int file = open(i_location, O_RDONLY, 0);
+            if (file < 0)
+            {
+                perror("File could not be opened");
+                exit(0);
+            }
+            dup2(file, 0);
+
+            close(file);
         }
-        dup2(file, 0);
-        close(file);
-    }
 
-    if (out > 0)
-    {
-       int file1 = creat(o_location, 0644);
-       if(file1 < 0) {
-           perror("Could not open the file");
-           exit(0);
-       }
-       dup2(file1, 1);
-       close(file1);
-    }
+        if (out > 0)
+        {
+            int file1 = creat(o_location, 0644);
+            if (file1 < 0)
+            {
+                perror("Could not open the file");
+                exit(0);
+            }
+            dup2(file1, 1);
+            close(file1);
+        }
 
-    //TODO execute kommando etter io redirection.
-    if (execvp(*args, args) < 0)
+        // TODO execute kommando etter io redirection.
+        if (execvp(*args, args) < 0)
         {
             error(0, errno, "Failed run command.");
         }
         exit(0);
-    //sende inn riktig parsede argumenter.
+        // sende inn riktig parsede argumenter.
 
-    //exite
-  
+        // exite
     }
 
-    else {
+    else
+    {
         int status;
         waitpid(pid, &status, 0);
+        printf("Exit status [%s]: %i\n", args_str, status);
         return status;
     }
-
 }
-
 
 int main(int argc, char const *argv[])
 {

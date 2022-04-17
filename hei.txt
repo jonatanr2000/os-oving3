@@ -1,1 +1,8 @@
-hei på deg
+README.md
+a
+hei.txt
+mithushell.c
+s.txt
+shell
+shell.c
+whaaat.txt
