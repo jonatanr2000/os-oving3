@@ -1,15 +1,7 @@
 README.md
 a
 hei.txt
-<<<<<<< HEAD
 mithushell
-=======
->>>>>>> 8e937e952f80b4d22e651bc79ebec52c09c47264
 mithushell.c
-s.txt
-shell
 shell.c
-<<<<<<< HEAD
-=======
-whaaat.txt
->>>>>>> 8e937e952f80b4d22e651bc79ebec52c09c47264
+workingshell.c

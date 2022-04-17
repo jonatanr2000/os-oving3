@@ -7,8 +7,8 @@
 #include <readline/readline.h>
 #include <readline/history.h>
 #include <errno.h>
-#include <mach/error.h>
-//#include <error.h>
+//#include <mach/error.h>
+#include <error.h>
 #include <regex.h>
 #include <fcntl.h>
 
@@ -144,8 +144,9 @@ void process_input()
 
     if ((midl_token = fgets(input, MAX_LIMIT, stdin)) == NULL)
     {
-        // print_error();
-        unix_err(errno);
+        //print_error();
+        perror("Could not find &");
+        //unix_err(errno);
     }
     lastChar = midl_token[(strlen(midl_token) - 2)];
     printf("%c \n", lastChar);
@@ -153,9 +154,9 @@ void process_input()
     if (lastChar == '&')
     {
         runBackgroundProcess = 1;
-        printf("%s \n", midl_token);
+        //printf("%s \n", midl_token);
         midl_token[(strlen(midl_token) - 2)] = '\0';
-        printf("%s \n", midl_token);
+        //printf("%s \n", midl_token);
     }
     else
     {
@@ -255,8 +256,8 @@ void exec_command()
         // printf("Executing [%s]\n", input);
         if (execvp(*args, args) < 0)
         {
-            // error(0, errno, "Failed run command.");
-            unix_err(errno);
+            error(0, errno, "Failed run command.");
+            //unix_err(errno);
         }
         exit(0);
     }
@@ -365,8 +366,8 @@ int ioredirection()
         // TODO execute kommando etter io redirection.
         if (execvp(*args, args) < 0)
         {
-            // error(0, errno, "Failed run command.");
-            unix_err(errno);
+            error(0, errno, "Failed run command.");
+            //unix_err(errno);
         }
         exit(0);
         // sende inn riktig parsede argumenter.
