@@ -20,6 +20,10 @@ int command_handler();
 int ioredirection();
 void exec_command();
 void fix_command_args();
+void printList();
+void insertToLinkedList();
+int removeFromLinkedList();
+int isEmpty();
 
 char input[MAX_LIMIT];
 char args_str[MAX_LIMIT];
@@ -83,7 +87,7 @@ int removeFromLinkedList(int data)
 
     if (isEmpty() == 1)
     {
-        return NULL;
+        return 0;
     }
 }
 
@@ -127,7 +131,7 @@ void process_input()
 
     // Saving the argument string for later use
     strcpy(args_str, input);
-    args_str[strlen(args_str)-1]='\0';
+    args_str[strlen(args_str) - 1] = '\0';
 
     char *token;
     char *midl_token;
@@ -176,19 +180,11 @@ void process_input()
     // }
 
     // printf("%c", parsed);
-<<<<<<< HEAD
-    if (ioredirection() == 1)
-    {
-        return;
-    }
-    // command_handler();
-=======
     if (ioredirection() == 0)
     {
         return;
     }
     command_handler();
->>>>>>> 8e937e952f80b4d22e651bc79ebec52c09c47264
 }
 
 int command_handler()
@@ -255,17 +251,12 @@ void exec_command()
     else if (pid == 0)
     {
         fix_command_args();
-        
-        //printf("Executing [%s]\n", input);
+
+        // printf("Executing [%s]\n", input);
         if (execvp(*args, args) < 0)
         {
-<<<<<<< HEAD
             // error(0, errno, "Failed run command.");
             unix_err(errno);
-=======
-            error(0, errno, "Failed run command.");
-            // error();
->>>>>>> 8e937e952f80b4d22e651bc79ebec52c09c47264
         }
         exit(0);
     }
@@ -283,11 +274,7 @@ void fix_command_args()
 
     for (int i = 0; i < MAX_ARGS; i++)
     {
-<<<<<<< HEAD
-        if (parsed[i] == NULL)
-=======
         if (parsed[i] == NULL || parsed[i] == "\0")
->>>>>>> 8e937e952f80b4d22e651bc79ebec52c09c47264
         {
             continue;
         }
@@ -313,23 +300,6 @@ int ioredirection()
 
         char i_location[128];
         char o_location[128];
-<<<<<<< HEAD
-
-        while (parsed[count] != NULL)
-        {
-
-            if (strcmp(parsed[count], "<") == 0)
-            {
-                in = count;
-                parsed[count] = NULL;
-
-                strcpy(i_location, parsed[count + 1]);
-                // Vi må muligens ha med denne også.
-                parsed[count + 1] = NULL;
-
-                // Gjør sånn at args-arrayet KUN har kommandoen som skal bli utført
-                fix_command_args();
-=======
 
         // for (int i = 0; i < MAX_ARGS; i++) {
         //     printf("%s \n", parsed[i]);
@@ -348,29 +318,10 @@ int ioredirection()
 
                 // Vi må muligens ha med denne også.
                 parsed[count + 1] = "\0";
->>>>>>> 8e937e952f80b4d22e651bc79ebec52c09c47264
             }
             if (strcmp(parsed[count], ">") == 0)
             {
                 out = count;
-<<<<<<< HEAD
-                parsed[count] = NULL;
-
-                strcpy(o_location, parsed[count + 1]);
-                // Vi må muligens ha med denne også.
-                parsed[count + 1] = NULL;
-
-                // Gjør sånn at args-arrayet KUN har kommandoen som skal bli utført
-                fix_command_args();
-            }
-
-            count++;
-        }
-
-        if (in < 0 && out < 0)
-        {
-            return 0;
-=======
                 parsed[count] = "\0";
 
                 strcpy(o_location, parsed[count + 1]);
@@ -385,7 +336,6 @@ int ioredirection()
         if (in < 0 && out < 0)
         {
             return 1;
->>>>>>> 8e937e952f80b4d22e651bc79ebec52c09c47264
         }
 
         if (in > 0)
@@ -397,10 +347,6 @@ int ioredirection()
                 exit(0);
             }
             dup2(file, 0);
-<<<<<<< HEAD
-=======
-
->>>>>>> 8e937e952f80b4d22e651bc79ebec52c09c47264
             close(file);
         }
 
