@@ -14,7 +14,7 @@
 
 #define clear() printf("\033[H\033[J")
 #define MAX_LIMIT 1024
-#define MAX_ARGS 30
+#define MAX_ARGS 8
 
 int command_handler();
 int ioredirection();
@@ -176,9 +176,9 @@ void process_input()
 
     parsed[count] = NULL;
 
-    // for (int i = 0; i < MAX_ARGS; i++) {
-    //       printf("%s \n", parsed[i]);
-    // }
+    for (int i = 0; i < MAX_ARGS; i++) {
+        printf("%s \n", parsed[i]);
+    }
 
     // printf("%c", parsed);
     if (ioredirection() == 0)
@@ -276,15 +276,16 @@ void fix_command_args()
     {
         if (parsed[i] == NULL || parsed[i] == "\0")
         {
+            args[i] = NULL;
             continue;
         }
 
         args[i] = parsed[i];
     }
 
-    // for (int i = 0; i < MAX_ARGS; i++) {
-    //       printf("%s \n", args[i]);
-    // }
+    for (int i = 0; i < MAX_ARGS; i++) {
+           printf("%s \n", args[i]);
+    }
 }
 
 int ioredirection()
