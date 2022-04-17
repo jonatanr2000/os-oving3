@@ -6,3 +6,5 @@ mithushell.c
 s.txt
 shell
 shell.c
+simen.txt
+text.txt

@@ -7,8 +7,8 @@
 #include <readline/readline.h>
 #include <readline/history.h>
 #include <errno.h>
-//#include <mach/error.h>
-#include <error.h>
+#include <mach/error.h>
+//#include <error.h>
 #include <regex.h>
 #include <fcntl.h>
 
@@ -24,6 +24,78 @@ char input[MAX_LIMIT];
 char *parsed[MAX_ARGS];
 char *args[MAX_ARGS];
 char seps[] = " \t\r\n";
+
+// background process
+struct node
+{
+    int data;
+    char *command;
+    struct node *next;
+};
+
+struct node *head = NULL;
+struct node *current = NULL;
+
+// display the list
+void printList()
+{
+    struct node *ptr = head;
+    printf("\n[ ");
+    if (ptr == NULL)
+    {
+        printf("There are no background processes");
+    }
+    // start from the beginning
+    while (ptr != NULL)
+    {
+        printf("Pid: %d, command: %s\n", ptr->data, ptr->command);
+    }
+    printf(" ]");
+}
+
+// insert link at the first location
+void insertToLinkedList(int data, char *commandArgs)
+{
+    if (isEmpty() == 1)
+    {
+        head = (struct node *)malloc(sizeof(struct node));
+        head->data = data;
+        head->command = strdup(commandArgs);
+        current = head;
+    }
+    else
+    {
+        struct node *inputNode = (struct node *)malloc(sizeof(struct node));
+        inputNode->data = data;
+        inputNode->command = strdup(commandArgs);
+        current->next = inputNode;
+        current = inputNode;
+    }
+}
+
+// delete a link with given key
+int removeFromLinkedList(int data)
+{
+    struct node *current = head;
+    struct node *previous = NULL;
+
+    if (isEmpty() == 1)
+    {
+        return NULL;
+    }
+}
+
+// if list is empty
+int isEmpty()
+{
+    if (head == NULL)
+    {
+        return 1;
+    };
+    return 0;
+}
+
+// background process
 
 void init_shell()
 {
@@ -48,19 +120,41 @@ void printDir()
     printf("Dir: %s: ", cwd);
 }
 
-void take_input()
-{
-    fgets(input, MAX_LIMIT, stdin);
-}
-
 void process_input()
 {
 
     char *token;
+    char *midl_token;
+    char lastChar;
     int count = 0;
 
-    token = strtok(input, seps);
+    // background process kode
+    int runBackgroundProcess;
+    memset(input, 0, sizeof(input));
 
+    if ((midl_token = fgets(input, MAX_LIMIT, stdin)) == NULL)
+    {
+        // print_error();
+        unix_err(errno);
+    }
+    lastChar = midl_token[(strlen(midl_token) - 2)];
+    printf("%c \n", lastChar);
+
+    if (lastChar == '&')
+    {
+        runBackgroundProcess = 1;
+        printf("%s \n", midl_token);
+        midl_token[(strlen(midl_token) - 2)] = '\0';
+        printf("%s \n", midl_token);
+    }
+    else
+    {
+        runBackgroundProcess = 0;
+    }
+    printf("%d \n", runBackgroundProcess);
+    // background process kode
+
+    token = strtok(input, seps);
     while (token != NULL)
     {
         /* While there are tokens in "string" */
@@ -74,13 +168,13 @@ void process_input()
     //       printf("%s \n", parsed[i]);
     // }
 
-    //printf("%c", parsed);
-    if (ioredirection() == 1) {
+    // printf("%c", parsed);
+    if (ioredirection() == 1)
+    {
         return;
     }
-    //command_handler();
+    // command_handler();
 }
-
 
 int command_handler()
 {
@@ -133,7 +227,6 @@ int command_handler()
     return 0;
 }
 
-
 void exec_command()
 {
 
@@ -149,8 +242,8 @@ void exec_command()
         printf("Executing %s\n", parsed[0]);
         if (execvp(parsed[0], parsed) < 0)
         {
-            error(0, errno, "Failed run command.");
-            //error();
+            // error(0, errno, "Failed run command.");
+            unix_err(errno);
         }
         exit(0);
     }
@@ -162,11 +255,13 @@ void exec_command()
     }
 }
 
-void fix_command_args() {
-    
+void fix_command_args()
+{
+
     for (int i = 0; i < MAX_ARGS; i++)
     {
-        if (parsed[i] == NULL) {
+        if (parsed[i] == NULL)
+        {
             continue;
         }
 
@@ -178,97 +273,99 @@ void fix_command_args() {
     // }
 }
 
-int ioredirection() {
+int ioredirection()
+{
 
     int pid = fork();
 
-    if(pid==0){
-    
-    int in = -1, out = -1;
-    int count = 0;
-    
-    char i_location[128];
-    char o_location[128];
-
-    while (parsed[count] != NULL)
+    if (pid == 0)
     {
-        
-        if (strcmp(parsed[count], "<") == 0)
+
+        int in = -1, out = -1;
+        int count = 0;
+
+        char i_location[128];
+        char o_location[128];
+
+        while (parsed[count] != NULL)
         {
-            in = count;
-            parsed[count] = NULL;
 
-            strcpy(i_location, parsed[count+1]);
-            //Vi må muligens ha med denne også. 
-            parsed[count+1] = NULL;
+            if (strcmp(parsed[count], "<") == 0)
+            {
+                in = count;
+                parsed[count] = NULL;
 
-            // Gjør sånn at args-arrayet KUN har kommandoen som skal bli utført
-            fix_command_args();
+                strcpy(i_location, parsed[count + 1]);
+                // Vi må muligens ha med denne også.
+                parsed[count + 1] = NULL;
+
+                // Gjør sånn at args-arrayet KUN har kommandoen som skal bli utført
+                fix_command_args();
+            }
+            if (strcmp(parsed[count], ">") == 0)
+            {
+                out = count;
+                parsed[count] = NULL;
+
+                strcpy(o_location, parsed[count + 1]);
+                // Vi må muligens ha med denne også.
+                parsed[count + 1] = NULL;
+
+                // Gjør sånn at args-arrayet KUN har kommandoen som skal bli utført
+                fix_command_args();
+            }
+
+            count++;
         }
-        if (strcmp(parsed[count], ">") == 0)
+
+        if (in < 0 && out < 0)
         {
-            out = count;
-            parsed[count] = NULL;
-
-            strcpy(o_location, parsed[count+1]);
-            //Vi må muligens ha med denne også. 
-            parsed[count+1] = NULL;
-
-            // Gjør sånn at args-arrayet KUN har kommandoen som skal bli utført
-            fix_command_args();
+            return 0;
         }
-        
-        count++;
-    }
 
-    if (in < 0 && out < 0)
-    {
-        return 0;
-    }
-
-    if (in > 0)
-    {   
-        int file = open(i_location, O_RDONLY, 0);
-        if (file <0 )
+        if (in > 0)
         {
-            perror("File could not be opened");
-            exit(0);
+            int file = open(i_location, O_RDONLY, 0);
+            if (file < 0)
+            {
+                perror("File could not be opened");
+                exit(0);
+            }
+            dup2(file, 0);
+            close(file);
         }
-        dup2(file, 0);
-        close(file);
-    }
 
-    if (out > 0)
-    {
-       int file1 = creat(o_location, 0644);
-       if(file1 < 0) {
-           perror("Could not open the file");
-           exit(0);
-       }
-       dup2(file1, 1);
-       close(file1);
-    }
-
-    //TODO execute kommando etter io redirection.
-    if (execvp(*args, args) < 0)
+        if (out > 0)
         {
-            error(0, errno, "Failed run command.");
+            int file1 = creat(o_location, 0644);
+            if (file1 < 0)
+            {
+                perror("Could not open the file");
+                exit(0);
+            }
+            dup2(file1, 1);
+            close(file1);
+        }
+
+        // TODO execute kommando etter io redirection.
+        if (execvp(*args, args) < 0)
+        {
+            // error(0, errno, "Failed run command.");
+            unix_err(errno);
         }
         exit(0);
-    //sende inn riktig parsede argumenter.
+        // sende inn riktig parsede argumenter.
 
-    //exite
-  
+        // exite
     }
 
-    else {
+    else
+    {
         int status;
         waitpid(pid, &status, 0);
         return status;
     }
-
 }
-
 
 int main(int argc, char const *argv[])
 {
@@ -277,7 +374,6 @@ int main(int argc, char const *argv[])
     while (1)
     {
         printDir();
-        take_input();
         // exec_command();
         process_input();
     }
