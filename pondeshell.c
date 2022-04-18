@@ -101,6 +101,7 @@ void insertToLinkedList(int pid)
 }
 
 int removeFromLinkedList(int pid)
+//Må kanskje fikse return value her eller gjøre til void
 {
     struct node *ptr = head;
     struct node *previous = head;
@@ -110,26 +111,20 @@ int removeFromLinkedList(int pid)
         return 0;
     }
 
-    while (ptr != NULL)
-    {
-        if (ptr->pid == pid)
-        {
-            if (ptr == head)
-            {
-                head = NULL;
-                tail = NULL;
-            }
-            else
-            {
-                previous->next = ptr->next;
-            }
-        }
+    if(ptr != NULL && ptr->pid==pid) {
+        head = ptr ->next;
         free(ptr);
-        break;
+        return 1;
     }
 
-    previous = ptr;
-    ptr = ptr->next;
+    while (ptr != NULL && ptr->pid!=pid)
+    {
+        previous = ptr;
+        ptr = ptr-> next;
+    }
+
+    previous->next = ptr->next;
+    free(ptr);
     return 1;
 }
 
@@ -149,8 +144,11 @@ void catchZombie()
 
     int pid = waitpid(-1, &status, WNOHANG);
 
+    printf("%d", pid);
+
     if (pid > 0)
     {
+        printf("zooombies");
         removeFromLinkedList(pid);
         catchZombie();
     }
