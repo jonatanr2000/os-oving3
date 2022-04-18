@@ -74,24 +74,27 @@ void printList()
     while (ptr != NULL)
     {
         printf("Pid: %d, command: %s\n", ptr->pid, ptr->command);
+        ptr = ptr->next;
     }
     printf(" ]");
 }
 
-void insertToLinkedList(int pid, char *commandArgs)
+
+void insertToLinkedList(int pid)
 {
+    
     if (isEmpty() == 1)
     {
         head = (struct node *)malloc(sizeof(struct node));
         head->pid = pid;
-        head->command = strdup(commandArgs);
+        head->command = strdup(args_str);
         tail = head;
     }
     else
     {
         struct node *newNode = (struct node *)malloc(sizeof(struct node));
         newNode->pid = pid;
-        newNode->command = strdup(commandArgs);
+        newNode->command = strdup(args_str);
         tail->next = newNode;
         tail = newNode;
     }
@@ -269,9 +272,12 @@ void exec_command(int runBackgroundProcess)
 
         ioredirection();
         fix_command_args();
-        for (int i = 0; i < MAX_ARGS; i++)
-        {
-            printf("%s \n", args[i]);
+        // for (int i = 0; i < MAX_ARGS; i++)
+        // {
+        //     printf("%s \n", args[i]);
+        // }
+        if (runBackgroundProcess) {
+            printf("\n");
         }
         if (execvp(*args, args) < 0)
         {
@@ -283,12 +289,16 @@ void exec_command(int runBackgroundProcess)
     else
     {
         int status;
+
         waitpid(pid, &status, options);
         if (runBackgroundProcess)
         {
-            insertToLinkedList(pid, *args);
+            insertToLinkedList(pid);
         }
-        printf("Exit status [%s]: %i\n", args_str, status);
+         if (WIFEXITED(status))
+            {
+                printf("pid: %d exited with status %d\n", pid, WEXITSTATUS(status));
+            }
         return;
     }
 }
