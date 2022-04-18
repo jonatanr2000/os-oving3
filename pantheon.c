@@ -146,7 +146,6 @@ void catchZombie()
 
     if (pid > 0)
     {
-        printf("zooombies");
         removeFromLinkedList(pid);
         catchZombie();
     }
