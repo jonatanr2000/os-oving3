@@ -144,6 +144,8 @@ void catchZombie()
 
     int pid = waitpid(-1, &status, WNOHANG);
 
+    // TODO legg til avsluttede prosesser i en liste
+
     if (pid > 0)
     {
         removeFromLinkedList(pid);
@@ -290,10 +292,10 @@ void exec_command(int runBackgroundProcess)
         {
             insertToLinkedList(pid);
         }
-         if (WIFEXITED(status))
-            {
-                printf("PID: %d exited with status %d\n", pid, WEXITSTATUS(status));
-            }
+        if (WIFEXITED(status))
+        {
+            printf("PID: %d exited with status %d\n", pid, WEXITSTATUS(status));
+        }
         return;
     }
 }
