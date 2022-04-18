@@ -7,8 +7,8 @@
 #include <readline/readline.h>
 #include <readline/history.h>
 #include <errno.h>
-#include <mach/error.h>
-//#include <error.h>
+//#include <mach/error.h>
+#include <error.h>
 #include <regex.h>
 #include <fcntl.h>
 
@@ -129,10 +129,6 @@ void printDir()
 void process_input()
 {
 
-    // Saving the argument string for later use
-    strcpy(args_str, input);
-    args_str[strlen(args_str) - 1] = '\0';
-
     char *token;
     char *midl_token;
     char lastChar;
@@ -148,6 +144,11 @@ void process_input()
         perror("Could not find &");
         // unix_err(errno);
     }
+    
+    // Saving the argument string for later use
+    strcpy(args_str, input);
+    args_str[strlen(args_str) - 1] = '\0';
+
     lastChar = midl_token[(strlen(midl_token) - 2)];
     // printf("%c \n", lastChar);
 
@@ -176,9 +177,9 @@ void process_input()
 
     parsed[count] = NULL;
 
-    for (int i = 0; i < MAX_ARGS; i++) {
-        printf("%s \n", parsed[i]);
-    }
+    // for (int i = 0; i < MAX_ARGS; i++) {
+    //     printf("%s \n", parsed[i]);
+    // }
 
     // printf("%c", parsed);
     if (ioredirection() == 0)
@@ -255,8 +256,8 @@ void exec_command()
         // printf("Executing [%s]\n", input);
         if (execvp(*args, args) < 0)
         {
-            // error(0, errno, "Failed run command.");
-            unix_err(errno);
+            error(0, errno, "Failed run command.");
+            //unix_err(errno);
         }
         exit(0);
     }
@@ -283,9 +284,9 @@ void fix_command_args()
         args[i] = parsed[i];
     }
 
-    for (int i = 0; i < MAX_ARGS; i++) {
-           printf("%s \n", args[i]);
-    }
+    // for (int i = 0; i < MAX_ARGS; i++) {
+    //        printf("%s \n", args[i]);
+    // }
 }
 
 int ioredirection()
@@ -366,8 +367,8 @@ int ioredirection()
         // TODO execute kommando etter io redirection.
         if (execvp(*args, args) < 0)
         {
-            // error(0, errno, "Failed run command.");
-            unix_err(errno);
+            error(0, errno, "Failed run command.");
+            //unix_err(errno);
         }
         exit(0);
         // sende inn riktig parsede argumenter.
