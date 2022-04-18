@@ -66,17 +66,17 @@ struct node *tail = NULL;
 void printList()
 {
     struct node *ptr = head;
-    printf("\n[ ");
+    printf("[ \n");
     if (ptr == NULL)
     {
         printf("There are no background processes \n");
     }
     while (ptr != NULL)
     {
-        printf("Pid: %d, command: %s\n", ptr->pid, ptr->command);
+        printf("PID: %d, command: %s\n", ptr->pid, ptr->command);
         ptr = ptr->next;
     }
-    printf(" ]");
+    printf("]\n");
 }
 
 
@@ -297,7 +297,7 @@ void exec_command(int runBackgroundProcess)
         }
          if (WIFEXITED(status))
             {
-                printf("pid: %d exited with status %d\n", pid, WEXITSTATUS(status));
+                printf("PID: %d exited with status %d\n", pid, WEXITSTATUS(status));
             }
         return;
     }
