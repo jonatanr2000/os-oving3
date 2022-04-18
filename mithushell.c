@@ -7,8 +7,6 @@
 #include <readline/readline.h>
 #include <readline/history.h>
 #include <errno.h>
-#include <mach/error.h>
-//#include <error.h>
 #include <regex.h>
 #include <fcntl.h>
 
@@ -30,17 +28,15 @@ char args_str[MAX_LIMIT];
 char *parsed[MAX_ARGS];
 char *args[MAX_ARGS];
 char seps[] = " \t\r\n";
-
-// background process
 struct node
 {
-    int data;
+    int pid;
     char *command;
     struct node *next;
 };
 
 struct node *head = NULL;
-struct node *current = NULL;
+struct node *tail = NULL;
 
 // display the list
 void printList()
@@ -54,54 +50,88 @@ void printList()
     // start from the beginning
     while (ptr != NULL)
     {
-        printf("Pid: %d, command: %s\n", ptr->data, ptr->command);
+        printf("Pid: %d, command: %s\n", ptr->pid, ptr->command);
     }
     printf(" ]");
 }
 
 // insert link at the first location
-void insertToLinkedList(int data, char *commandArgs)
+void insertToLinkedList(int pid, char *commandArgs)
 {
     if (isEmpty() == 1)
     {
         head = (struct node *)malloc(sizeof(struct node));
-        head->data = data;
+        head->pid = pid;
         head->command = strdup(commandArgs);
-        current = head;
+        tail = head;
     }
     else
     {
-        struct node *inputNode = (struct node *)malloc(sizeof(struct node));
-        inputNode->data = data;
-        inputNode->command = strdup(commandArgs);
-        current->next = inputNode;
-        current = inputNode;
+        struct node *newNode = (struct node *)malloc(sizeof(struct node));
+        newNode->pid = pid;
+        newNode->command = strdup(commandArgs);
+        tail->next = newNode;
+        tail = newNode;
     }
 }
 
 // delete a link with given key
-int removeFromLinkedList(int data)
+int removeFromLinkedList(int pid)
 {
-    struct node *current = head;
-    struct node *previous = NULL;
+    struct node *ptr = head;
+    struct node *previous = head;
 
     if (isEmpty() == 1)
     {
         return 0;
     }
+
+    while (ptr != NULL)
+    {
+        if (ptr->pid == pid)
+        {
+            if (ptr == head)
+            {
+                head = NULL;
+                tail = NULL;
+            }
+            else
+            {
+                previous->next = ptr->next;
+            }
+        }
+        free(ptr);
+        break;
+    }
+
+    previous = ptr;
+    ptr = ptr->next;
+    return 1;
 }
 
 // if list is empty
 int isEmpty()
 {
-    if (head == NULL)
+    struct node *ptr = head;
+    if (ptr == NULL)
     {
         return 1;
     };
     return 0;
 }
 
-// background process
+void catchZombie()
+{
+    int status;
+
+    int pid = waitpid(-1, &status, WNOHANG);
+
+    if (pid > 0)
+    {
+        removeFromLinkedList(pid);
+        catchZombie();
+    }
+}
 
 void init_shell()
 {
@@ -129,41 +159,34 @@ void printDir()
 void process_input()
 {
 
-    // Saving the argument string for later use
-    strcpy(args_str, input);
-    args_str[strlen(args_str) - 1] = '\0';
-
     char *token;
     char *midl_token;
     char lastChar;
     int count = 0;
 
-    // background process kode
     int runBackgroundProcess;
     memset(input, 0, sizeof(input));
 
     if ((midl_token = fgets(input, MAX_LIMIT, stdin)) == NULL)
     {
-        // print_error();
         perror("Could not find &");
-        // unix_err(errno);
     }
+
+    // Saving the argument string for later use
+    strcpy(args_str, input);
+    args_str[strlen(args_str) - 1] = '\0';
+
     lastChar = midl_token[(strlen(midl_token) - 2)];
-    // printf("%c \n", lastChar);
 
     if (lastChar == '&')
     {
         runBackgroundProcess = 1;
-        // printf("%s \n", midl_token);
         midl_token[(strlen(midl_token) - 2)] = '\0';
-        // printf("%s \n", midl_token);
     }
     else
     {
         runBackgroundProcess = 0;
     }
-    // printf("%d \n", runBackgroundProcess);
-    //  background process kode
 
     token = strtok(input, seps);
     while (token != NULL)
@@ -176,19 +199,21 @@ void process_input()
 
     parsed[count] = NULL;
 
-    for (int i = 0; i < MAX_ARGS; i++) {
+    /*
+    for (int i = 0; i < MAX_ARGS; i++)
+    {
         printf("%s \n", parsed[i]);
     }
-
-    // printf("%c", parsed);
-    if (ioredirection() == 0)
+    */
+   
+        if (ioredirection() == 0)
     {
         return;
     }
     command_handler();
 }
 
-int command_handler()
+int command_handler();
 {
 
     int num_commands = 4, commandswitch = 0;
@@ -255,8 +280,7 @@ void exec_command()
         // printf("Executing [%s]\n", input);
         if (execvp(*args, args) < 0)
         {
-            // error(0, errno, "Failed run command.");
-            unix_err(errno);
+            perror("could not execute command");
         }
         exit(0);
     }
@@ -283,12 +307,15 @@ void fix_command_args()
         args[i] = parsed[i];
     }
 
-    for (int i = 0; i < MAX_ARGS; i++) {
-           printf("%s \n", args[i]);
+    /*
+    for (int i = 0; i < MAX_ARGS; i++)
+    {
+        printf("%s \n", args[i]);
     }
+    */
 }
 
-int ioredirection()
+int ioredirection(int isABackgroundProcess)
 {
 
     int pid = fork();
@@ -366,12 +393,10 @@ int ioredirection()
         // TODO execute kommando etter io redirection.
         if (execvp(*args, args) < 0)
         {
-            // error(0, errno, "Failed run command.");
-            unix_err(errno);
+            perror("Could not execute command");
         }
         exit(0);
         // sende inn riktig parsede argumenter.
-
         // exite
     }
 
@@ -387,7 +412,6 @@ int ioredirection()
 int main(int argc, char const *argv[])
 {
     init_shell();
-    // stdout_redirection();
     while (1)
     {
         printDir();
