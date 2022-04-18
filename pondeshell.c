@@ -144,8 +144,6 @@ void catchZombie()
 
     int pid = waitpid(-1, &status, WNOHANG);
 
-    printf("%d", pid);
-
     if (pid > 0)
     {
         printf("zooombies");
@@ -190,7 +188,7 @@ int command_handler(int runBackgroundProcess)
     switch (commandswitch)
     {
     case 1:
-        printf("Goodbye motherfucker!");
+        printf("Goodbye g!");
         exit(0);
         break;
 
@@ -274,9 +272,9 @@ void exec_command(int runBackgroundProcess)
         // {
         //     printf("%s \n", args[i]);
         // }
-        if (runBackgroundProcess) {
-            printf("\n");
-        }
+        //if (runBackgroundProcess) {
+        //    printf("\n");
+        //}
         if (execvp(*args, args) < 0)
         {
             perror("could not execute command");

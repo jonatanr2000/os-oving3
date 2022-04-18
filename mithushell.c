@@ -239,7 +239,7 @@ int command_handler();
     switch (commandswitch)
     {
     case 1:
-        printf("Goodbye motherfucker!");
+        printf("Goodbye brosis!");
         exit(0);
         break;
 
