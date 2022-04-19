@@ -30,16 +30,12 @@ char *parsed[MAX_ARGS];
 char *args[MAX_ARGS];
 char seps[] = " \t\r\n";
 
-
 void init_shell()
 {
-    /*
-    initializes shell
-    */
     clear();
     printf("\n\n\n\n******************"
            "************************");
-    printf("\n\n\n\t******FLUSH******");
+    printf("\n\n\n\t****MY SHELL****");
     printf("\n\n\t-USE AT YOUR OWN RISK-");
     printf("\n\n\n\n*******************"
            "***********************");
@@ -52,9 +48,6 @@ void init_shell()
 
 void printDir()
 {
-    /*
-    Prints directory
-    */
     char cwd[1024];
     getcwd(cwd, sizeof(cwd));
     printf("Dir: %s: ", cwd);
@@ -62,9 +55,6 @@ void printDir()
 
 struct node
 {
-    /*
-    Creates a struct node
-    */
     int pid;
     char *command;
     struct node *next;
@@ -75,29 +65,24 @@ struct node *tail = NULL;
 
 void printList()
 {
-    /* 
-    Prints the background tasks
-    */
-
     struct node *ptr = head;
-    printf("Background tasks running:\n");
+    printf("[ \n");
     if (ptr == NULL)
     {
-        printf("~There are no background tasks~\n");
+        printf("There are no background processes \n");
     }
     while (ptr != NULL)
     {
-        printf("- PID: %d, command: %s\n", ptr->pid, ptr->command);
+        printf("PID: %d, command: %s\n", ptr->pid, ptr->command);
         ptr = ptr->next;
     }
+    printf("]\n");
 }
 
 
 void insertToLinkedList(int pid)
 {
-    /*
-    Inserts given process into linked list of current processes
-    */
+    
     if (isEmpty() == 1)
     {
         head = (struct node *)malloc(sizeof(struct node));
@@ -116,11 +101,8 @@ void insertToLinkedList(int pid)
 }
 
 int removeFromLinkedList(int pid)
+//Må kanskje fikse return value her eller gjøre til void
 {
-    /*
-    Removes given process from linked list of current processes
-    */
-
     struct node *ptr = head;
     struct node *previous = head;
 
@@ -148,9 +130,6 @@ int removeFromLinkedList(int pid)
 
 int isEmpty()
 {
-    /*
-    Checks if linked list of working processes is empty
-    */
     struct node *ptr = head;
     if (ptr == NULL)
     {
@@ -159,63 +138,24 @@ int isEmpty()
     return 0;
 }
 
-char* getCommandArgsFromPID(int pid) {
-    
-    /*
-    Returns the command args as a string from the given PID if PID is in list
-    of working background processes
-    */
-
-    struct node *ptr = head;
-    char* command_args = "\0"; 
-
-    if (isEmpty() == 1)
-    {
-        return command_args;
-    }
-    while (ptr != NULL) {
-        if (ptr->pid==pid) {
-            command_args = ptr->command;
-            break;
-        }
-        ptr = ptr-> next;
-    }
-
-    return command_args;
-}
-
 void catchZombie()
 {
-    /*
-    Checks for terminated processes and removes them from linked list of ongoing processes
-    */
     int status;
+
     int pid = waitpid(-1, &status, WNOHANG);
+
+    // TODO legg til avsluttede prosesser i en liste
 
     if (pid > 0)
     {
-
-
-        char* pid_command;
-        pid_command = getCommandArgsFromPID(pid);
-
-        removeFromLinkedList(pid);
-        
-        if (WIFEXITED(status))
-        {
-            printf("Background process with PID: %d exited with status %d [%s]\n", pid, WEXITSTATUS(status), pid_command);
-        }
-
+        insertToLinkedList(pid);
         catchZombie();
     }
 }
 
 void fix_command_args()
 {
-    /*
-    Removes all null-values from command array parsed and fills args-array with
-    non-null values
-    */
+
     for (int i = 0; i < MAX_ARGS; i++)
     {
         if (parsed[i] == NULL || parsed[i] == "\0")
@@ -230,11 +170,6 @@ void fix_command_args()
 
 int command_handler(int runBackgroundProcess)
 {
-    /*
-    Checks if any of the pre-determined commands are called. If not,
-    exec_args function will be run which uses execvp() to execture 
-    commands parsed by user
-    */
     int num_commands = 3, commandswitch = 0;
     char *commands[num_commands];
     commands[0] = "exit";
@@ -263,7 +198,6 @@ int command_handler(int runBackgroundProcess)
         return 1;
 
     case 3:
-        catchZombie();
         printList();
         return 1;
 
@@ -276,9 +210,6 @@ int command_handler(int runBackgroundProcess)
 
 void inputHandler()
 {
-    /*
-    Splits input args into a list of arguments seperated by separation tokens (parsed is the array used)
-    */
 
     char *token;
     char *midl_token;
@@ -321,8 +252,6 @@ void inputHandler()
 
 void exec_command(int runBackgroundProcess)
 {
-    /*
-    */
     int options = 0;
 
     if (runBackgroundProcess == 1)
@@ -340,7 +269,13 @@ void exec_command(int runBackgroundProcess)
 
         ioredirection();
         fix_command_args();
-
+        // for (int i = 0; i < MAX_ARGS; i++)
+        // {
+        //     printf("%s \n", args[i]);
+        // }
+        //if (runBackgroundProcess) {
+        //    printf("\n");
+        //}
         if (execvp(*args, args) < 0)
         {
             perror("could not execute command");
@@ -428,12 +363,12 @@ void ioredirection()
 
 int main(int argc, char const *argv[])
 {
-    init_shell(); // Displays a small welcome-message
+    init_shell();
     while (1)
     {
-        printDir(); // Prints working directory
-        inputHandler(); // Takes care of the input and runs commands
-        catchZombie(); // Catches zombie processes and removes unneccessary processes
+        printDir();
+        inputHandler();
+        catchZombie();
     }
     return 0;
 }
