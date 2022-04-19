@@ -1,7 +1,13 @@
 README.md
 a
+fgt.txt
+grovt
 hei.txt
+l.c
 mithushell
 mithushell.c
+pantheon
+pantheon.c
 shell.c
+simen.txt
 workingshell.c
