@@ -36,6 +36,7 @@ void init_shell()
     /*
     initializes shell
     */
+
     clear();
     printf("\n\n\n\n******************"
            "************************");
@@ -55,6 +56,7 @@ void printDir()
     /*
     Prints directory
     */
+
     char cwd[1024];
     getcwd(cwd, sizeof(cwd));
     printf("Dir: %s: ", cwd);
@@ -65,6 +67,7 @@ struct node
     /*
     Creates a struct node
     */
+
     int pid;
     char *command;
     struct node *next;
@@ -151,6 +154,7 @@ int isEmpty()
     /*
     Checks if linked list of working processes is empty
     */
+
     struct node *ptr = head;
     if (ptr == NULL)
     {
@@ -189,6 +193,7 @@ void catchZombie()
     /*
     Checks for terminated processes and removes them from linked list of ongoing processes
     */
+
     int status;
     int pid = waitpid(-1, &status, WNOHANG);
 
@@ -216,6 +221,7 @@ void fix_command_args()
     Removes all null-values from command array parsed and fills args-array with
     non-null values
     */
+
     for (int i = 0; i < MAX_ARGS; i++)
     {
         if (parsed[i] == NULL || parsed[i] == "\0")
@@ -235,6 +241,7 @@ int command_handler(int runBackgroundProcess)
     exec_args function will be run which uses execvp() to execture 
     commands parsed by user
     */
+
     int num_commands = 3, commandswitch = 0;
     char *commands[num_commands];
     commands[0] = "exit";
@@ -254,7 +261,7 @@ int command_handler(int runBackgroundProcess)
     switch (commandswitch)
     {
     case 1:
-        printf("Goodbye g!");
+        printf("Goodbye, have a nice day!");
         exit(0);
         break;
 
@@ -322,7 +329,9 @@ void inputHandler()
 void exec_command(int runBackgroundProcess)
 {
     /*
+    Takes care of executing command with regard to waitpid if command is a background process or not.
     */
+
     int options = 0;
 
     if (runBackgroundProcess == 1)
@@ -367,6 +376,9 @@ void exec_command(int runBackgroundProcess)
 
 void ioredirection()
 {
+    /*
+    Redirecting the standard input and standard output if it finds < and/or > in the parsed command line 
+    */
 
     int in = -1, out = -1;
     int count = 0;
